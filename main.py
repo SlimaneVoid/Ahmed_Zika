@@ -7,7 +7,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
 
+
+
 # Configuration
+time_before_starting = 60 # يا أحمد عدل هنا كذا واخذ دقيقة 1 قبل بدأ العمل
+timer_to_resend_again = "02:15" # وهذا لما يصل التايمر يضغط Resend
+time_to_detect_resend = (time_before_starting+10)
 url = 'https://phoneauth.plaync.com/signup?ticket_id=phoneauth_session_cache_de623d69-704e-45ad-9d23-d256433818e2&return_url=https%253A%252F%252Fid.plaync.com%252Fsignup%252Fphoneauthwebproc%253Fagreement_session%253Dagreement_session_cache_cb30d089-3a4c-446f-a740-9a77e516c288%2526ticket_id%253Dphoneauth_session_cache_de623d69-704e-45ad-9d23-d256433818e2'
 num_input_classname = "input-tel__input"
 proxy = 'http://67.43.227.227:15117'
@@ -31,7 +36,7 @@ def interact_with_page(number):
         driver.get(url)
         print(f"Opened URL: {driver.current_url}")
 
-        time.sleep(5)  # Wait for the page to load
+        time.sleep(time_before_starting) 
 
         driver.execute_script("""
             var firstEl = document.querySelector('.input-country-selector');
@@ -81,20 +86,21 @@ def interact_with_page(number):
         # Monitor the timer
         while True:
             try:
-                timer_element = WebDriverWait(driver, 16).until(
+                timer_element = WebDriverWait(driver, 20).until(
                     EC.visibility_of_element_located((By.XPATH, '//div[@class="timer"]/p'))
                 )
                 timer_text = timer_element.text
                 print(f"Timer text for browser {number} is: {timer_text}")
 
-                if timer_text == "01:50":
-                    second_button = WebDriverWait(driver, 18).until(
+                if timer_text == timer_to_resend_again:
+                    second_button = WebDriverWait(driver, time_to_detect_resend).until(
                         EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "btn-primary")]//span[text()="Resend"]'))
                     )
-                    driver.execute_script("arguments[0].scrollIntoView();", second_button)
+                    #driver.execute_script("arguments[0].scrollIntoView();", second_button)
+                    print(f"Timer reached {timer_to_resend_again} Clicking again...")
                     second_button.click()
 
-                    dialog_button = WebDriverWait(driver, 15).until(
+                    dialog_button = WebDriverWait(driver, time_to_detect_resend+4).until(
                         EC.element_to_be_clickable((By.XPATH, '//button[contains(text(), "Confirm")]'))
                     )
                     dialog_button.click()
